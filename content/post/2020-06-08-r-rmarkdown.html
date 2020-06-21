@@ -1,17 +1,24 @@
 ---
-title: "Hello R Markdown"
-author: "Frida Gomam"
-date: 2015-07-23T21:13:14-05:00
+title: "Recurrent Neural Network"
+subtitle: "Session1"
+author: "Gyeongdeok Seo"
+date: 2020-06-08T21:13:14-05:00
 categories: ["R"]
+mainfont: NanumGothic
 tags: ["R Markdown", "plot", "regression"]
 ---
 
 
 
-<div id="r-markdown" class="section level1">
-<h1>R Markdown</h1>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>You can embed an R code chunk like this:</p>
+<div id="explanation" class="section level1">
+<h1>Explanation</h1>
+CNN과 NN에서는 입출력의 차원이 고정되어 있는 경우가 대부분이었다. RNN에서는 하지만 입출력의 차원이 유동적이다. 주로 시계열자료나 time-dependent data(NL, Audio) 등에 사용이 된다.
+CNN과 NN과 같이 feed-forward network 계열(재귀적인 레이어가 존재하지 않는다.)과는 달리 RNN은 inner memory를 모델에 사용한다. 그리고 입력으로 이전의 출력값과 히든 스테이트를 사용하는 것이 특징이다.
+<br>
+<center>
+<img src="/post/2015-07-23-r-rmarkdown_files/rnn1.png" title="fig:" alt="RNN network" id="id" class="class" style="width:70.0%" />
+<center>
+<p>$$X_1 =</p>
 <pre class="r"><code>summary(cars)
 ##      speed           dist       
 ##  Min.   : 4.0   Min.   :  2.00  
@@ -41,7 +48,7 @@ pie(
   init.angle = -50, border = NA
 )</code></pre>
 <div class="figure"><span id="fig:pie"></span>
-<img src="/post/2015-07-23-r-rmarkdown_files/figure-html/pie-1.png" alt="A fancy pie chart." width="672" />
+<img src="/post/2020-06-08-r-rmarkdown_files/figure-html/pie-1.png" alt="A fancy pie chart." width="672" />
 <p class="caption">
 Figure 1: A fancy pie chart.
 </p>
