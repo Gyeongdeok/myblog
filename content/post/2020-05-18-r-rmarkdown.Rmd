@@ -1,5 +1,5 @@
 ---
-title: "Recurrent Neural Network(수정중)"
+title: "Recurrent Neural Network(Editing)"
 subtitle: "Session1"
 author: "Gyeongdeok Seo"
 date: 2020-05-18T21:13:14-05:00
