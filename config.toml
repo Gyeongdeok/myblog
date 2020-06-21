@@ -1,7 +1,7 @@
 baseurl = "/"
 languageCode = "en-us"
 title = "log(duck)^b"
-theme = "cactus-plus"
+theme = "hugo-theme-cactus-plus"
 googleAnalytics = ""
 disqusShortname = ""
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
