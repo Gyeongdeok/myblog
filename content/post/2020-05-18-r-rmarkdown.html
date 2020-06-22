@@ -1,5 +1,5 @@
 ---
-title: "Recurrent Neural Network(Editing)"
+title: "Recurrent Neural Network"
 subtitle: "Session1"
 author: "Gyeongdeok Seo"
 date: 2020-05-18T21:13:14-05:00
@@ -18,39 +18,16 @@ CNN과 NN과 같이 feed-forward network 계열(재귀적인 레이어가 존재
 <center>
 <img src="/post/2015-07-23-r-rmarkdown_files/rnn1.png" title="fig:" alt="RNN network" id="id" class="class" style="width:70.0%" />
 <center>
-<p>$$X_1 =</p>
-<pre class="r"><code>summary(cars)
-##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00
-fit &lt;- lm(dist ~ speed, data = cars)
-fit
-## 
-## Call:
-## lm(formula = dist ~ speed, data = cars)
-## 
-## Coefficients:
-## (Intercept)        speed  
-##     -17.579        3.932</code></pre>
 </div>
-<div id="including-plots" class="section level1">
-<h1>Including Plots</h1>
-<p>You can also embed plots. See Figure <a href="#fig:pie">1</a> for example:</p>
-<pre class="r"><code>par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c(&#39;Sky&#39;, &#39;Sunny side of pyramid&#39;, &#39;Shady side of pyramid&#39;),
-  col = c(&#39;#0292D8&#39;, &#39;#F7EA39&#39;, &#39;#C4B632&#39;),
-  init.angle = -50, border = NA
-)</code></pre>
-<div class="figure"><span id="fig:pie"></span>
-<img src="/post/2020-05-18-r-rmarkdown_files/figure-html/pie-1.png" alt="A fancy pie chart." width="672" />
-<p class="caption">
-Figure 1: A fancy pie chart.
-</p>
+<div id="vanishing-gradient" class="section level1">
+<h1>Vanishing Gradient</h1>
+<p>Vanishing Gradient 문제가 RNN에서 자주 발생할 때가 있다. 왜냐하면 Time-dependent 모델이기 때문에 특정 스테이트에서 모델을 업데이트 하기 위해서는 과거 스테이트의 정보가 다 들어가기 때문이다. 이런 경우에 작은 값이 있으면 바로 0으로 수렴해가기 때문에 이를 해결할 방법이 필요하다.</p>
 </div>
+<div id="lstm" class="section level1">
+<h1>LSTM</h1>
+<p>그 방법으로 먼저 Long Short Term Memory (LSTM)이 있다. 이 경우 학습 중간에 Forget gate를 넣어서 필요없는 항을 걸러준다. 즉, 중간에 중요성을 판단해준다고 보면 된다.</p>
+</div>
+<div id="gru" class="section level1">
+<h1>GRU</h1>
+<p>그 다음 Gated Recurrent Unit (GRU)이 있다. 이는 Simplified version of LSTM 이다.</p>
 </div>
