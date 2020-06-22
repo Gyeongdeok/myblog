@@ -1,5 +1,5 @@
 ---
-title: "Recurrent Neural Network(Editing)"
+title: "Recurrent Neural Network"
 subtitle: "Session1"
 author: "Gyeongdeok Seo"
 date: 2020-05-18T21:13:14-05:00
@@ -20,24 +20,11 @@ knitr::opts_chunk$set(collapse = TRUE)
 ![RNN network](/post/2015-07-23-r-rmarkdown_files/rnn1.png){#id .class width="70%"}
 <center>
 
-$$X_1 = 
-
-```{r cars}
-summary(cars)
-fit <- lm(dist ~ speed, data = cars)
-fit
-```
-
-# Including Plots
-
-You can also embed plots. See Figure \@ref(fig:pie) for example:
-
-```{r pie, fig.cap='A fancy pie chart.', tidy=FALSE}
-par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c('Sky', 'Sunny side of pyramid', 'Shady side of pyramid'),
-  col = c('#0292D8', '#F7EA39', '#C4B632'),
-  init.angle = -50, border = NA
-)
-```
+# Vanishing Gradient
+ Vanishing Gradient 문제가 RNN에서 자주 발생할 때가 있다. 왜냐하면 Time-dependent 모델이기 때문에 특정 스테이트에서 모델을 업데이트 하기 위해서는 과거 스테이트의 정보가 다 들어가기 때문이다. 이런 경우에 작은 값이 있으면 바로 0으로 수렴해가기 때문에 이를 해결할 방법이 필요하다.
+ 
+# LSTM
+ 그 방법으로 먼저 Long Short Term Memory (LSTM)이 있다. 이 경우 학습 중간에 Forget gate를 넣어서 필요없는 항을 걸러준다. 즉, 중간에 중요성을 판단해준다고 보면 된다.
+ 
+# GRU
+ 그 다음 Gated Recurrent Unit (GRU)이 있다. 이는 Simplified version of LSTM 이다.
