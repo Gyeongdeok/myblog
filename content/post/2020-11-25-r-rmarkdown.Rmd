@@ -12,77 +12,203 @@ knitr::opts_chunk$set(collapse = TRUE)
 knitr::opts_knit$set(root.dir = "C:/Users/Duck/myblog/data")
 ```
 
-# Data description
-현재 범죄데이터는 다음과 같은 
-
-| Default | Left| Right | Center |
-|--| :- | ---:| :------: |
-|A팀 | deinitice | 100| 연습중 |
-|B팀 | Jung | 90| 추가 |
-|C팀 | Lee | 95| 연습중 |
-|D팀 | Choi | 85| 추가 |
-|D팀 | Park | 60| 추가 |
-|D팀 | Hwang | 50 | 추가 |
-[출처] 36. 데이터 연동형 문서 만들기(5) - R Markdown에서 가독성 좋은 표를 더 간단히 그리기|작성자 바른인간
-
 
 ```{r}
 library(dplyr)
-# Preprocessing
 crime <- read.csv('TableB10.csv')
+options(warn=-1) # turning back code: warn=0
+# Preprocessing
 crime <- crime %>%
   mutate(pop = round(POPU1985 / LANDAREA,3)) %>%
   select(-c(POPU1985,LANDAREA))
-
 cat.data <- select(crime, c(REG,DIV))
 crime <- select(crime, -c(REG,DIV))
 crime <- scale(crime)
+head(crime)
+```
 
-# FA
+# Data description
+현재 다루고 있는 데이터는 다음과 같이 나타난다.
+
+| 변수명 | 데이터 타입 | 변수 설명 |
+|:----:|:-----:|:-----:|
+|POP|NUM|인구/면적으로 생성한 파생변수로 인구밀도를 나타낸다.|
+|MURD|NUM|10만명당 살인건수|
+|RAPE|NUM|10만명당 강간건수|
+|ROB|NUM|10만명당 강도건수(현장에 피해자 존재), 강도1|
+|ASSA|NUM|10만명당 폭행건수|
+|BURG|NUM|10만명당 강도건수(현장에 피해자 존재X), 강도2|
+|LARC|NUM|10만명당 절도건수|
+|AUTO|NUM|10만명당 자동차 절도건수|
+|REG|CAT|1~4, 지역구분(West, midwest, south, and northeast)|
+|DIV|CAT|1~9, REG에서 더 세부적으로 나뉨|
+
+# Factor Analysis
+요인 분석은 잠재변수를 찾아서 차원을 축소하는 방식이다. 현재 데이터는 범주형 변수를 제외하고 8개의 변수(인구밀도 및 범죄유형)가 존재한다. 요인분석은 해당 8개의 변수를 더 적은 수의 변수로 설명하는 것이다. 이 때 몇개의 요인으로 이 변수를 설명하는 것이 적절한지에 대한 문제가 있는데, 해당 문제는 흔히 두가지 방식으로 결정할 수 있다.
+
+현재 데이터의 경우 Factor Analysis에서 적절한 factor 개수를 결정하기 위해 다음의 두가지 플랏을 그렸다.
+좌측은 Scree plot이고 우측은 Parallel Analysis를 이용한 방식이다. Scree plot을 그렸을 때 고유값이 1보다 클 때에는 요인이 3개일 때이다. 또한 우측의 그래프에서 교차하는 지점의 이전에서 가장 큰 정수는 3이다.
+
+Horn's' parallel anlalysis를 이용하여 FA에서의 요인 갯수를 산출한다. 해당 방법은 데이터 매트릭스에서 생성된 고유값과 몬테카를로 시뮬레이션으로 만들어진 고유값을 비교한다. 따라서 요인의 개수를 3으로 설정하는 것이 합리적이라고 볼 수 있다.
+
+(Horn, J.L. A rationale and test for the number of factors in factor analysis. Psychometrika 30, 179–185 (1965). https://doi.org/10.1007/BF02289447
+
+
+```{r}
 library(psych)
 covm <- cov(crime)
 corr <- cov2cor(covm)
 par(mfrow=c(1,2))
 scree(corr, factor=F)
 fa.parallel(corr, fa='fa')
+```
 
-# factor 3개가 적절해 보입니다.
+요인의 개수를 3개로 결정하였다. 그렇다면 해당 3개의 요인은 각각 어떤 변수를 설명하고 있을까?
+어느 변수를 얼마만큼의 설명력으로 나타내고 있는지는 다음과 같다.
+
+```{r}
 fa.varimax <- fa(crime, nfactors=3, rotate='varimax')
 colnames(fa.varimax$loadings) <- paste('Factor',1:3,sep='')
-par(mfrow=c(1,1))
-fa.diagram(fa.varimax)
 colnames(fa.varimax$scores) <- paste('Factor',1:3,sep='')
 fa.df <- fa.varimax$scores
+par(mfrow=c(1,1))
+fa.varimax
+fa.diagram(fa.varimax)
 
-# HC(Hierarchcial clustering): WARD, Complete, Single, Average, Centroid, using dendrogram
+```
+
+3가지의 요인은 데이터 매트릭스의 약 81%를 설명하고 있다. 
+
+Factor1은 절도, 강도1, 강간, 강도2를 설명한다. Factor2는 폭행과 살인을 설명하고 factor3은 인구밀도와 자동차 절도를 설명한다. 잠재변수의 관점으로 라벨링을 하면 factor1은 대인/대물범죄 factor2는 대인범죄 factor3은 인구밀도에 따른 차량절도죄를 설명한다. 계수를 살펴보면 다음과 같다.
+
+$$ F_{1} = 0.04MURD + 0.65RAPE + 0.50ROB + 0.29ASSA + 0.85BURG + 0.91LARC + 0.62AUTO - 0.01 pop $$
+
+
+$$ F_{2} = 0.87MURD + 0.57RAPE + 0.41ROB + 0.92ASSA + 0.28BURG + 0.04LARC + 0.12AUTO - 0.07 pop $$
+
+
+$$ F_{3} = - 0.04MURD - 0.08RAPE + 0.38ROB + 0.08ASSA + 0.23BURG - 0.02LARC + 0.64AUTO + 0.98 pop $$
+
+
+이 때 factor1(대인/대물범죄)은 절도, 강도1, 강간, 강도2와 양의 관계에 있으며 factor2(대인범죄)는 폭행과 살인에 대해 양의 관계를 가진다. factor3은 인구밀도와 차량절도죄에 대해 양의 관계를 가지고 있다.
+
+
+# 군집분석
+Unsupervised Learning-Clustering 포스팅에 언급을 하였지만, 크게 계층적 군집분석과 비계층적 군집분석을 나눌 수 있다. 계층적 군집분석은 Single, Complete, Average, Centroid, Ward method (거리 계산하는 방식이 각각 다르다.)의 방식이 있다. Distance matrix를 이용하여 계층을 나누는 것인데 실제 계층적 군집분석을 진행할 때, 지역이 차이가 있는지 확인해보자.
+
+```{r}
+library(dendextend)
+dend <- crime %>% dist %>% hclust(method='average') %>% as.dendrogram(labels=cata.data$REG)
+dend.hc <- crime %>% dist %>% hclust(method='average')
+
+i=0
+colLab<<-function(n){
+  if(is.leaf(n)){
+    #I take the current attributes
+    a=attributes(n)
+    #I deduce the line in the original data, and so the treatment and the specie.
+    ligne=match(attributes(n)$label,1:50)
+    region=cat.data[ligne,1];
+    if(region==1){cat.data$REG="red"};if(region==2){cat.data$REG="Darkgreen"}
+    if(region==3){cat.data$REG="blue"};if(region==5){cat.data$REG="black"}
+    #Modification of leaf attribute
+    attr(n,"nodePar")<-c(a$nodePar,list(cex=1.5,lab.cex=1,pch=20,col=cat.data$REG,lab.col=cat.data$REG,lab.font=1,lab.cex=1))
+  }
+  return(n)
+}
+
+dL <- dendrapply(dend, colLab)
+# ref: https://www.r-graph-gallery.com/31-custom-colors-in-dendrogram.html
+plot(dL , main="Dendogram(average method)")
+legend("topright", 
+       legend = c("reg=1" , "reg=2" , "reg=3" , "reg=4"), 
+       col = c("red", "Darkgreen" , "blue" , "black"), 
+       pch = c(20,20,20,20), bty = "n",  pt.cex = 1.5, cex = 0.8 , 
+       text.col = "black", horiz = FALSE, inset = c(0, 0.1))
+
+dend %>% rect.dendrogram(k=9)
+```
+
+
+계층적 군집분석에서 distance matrix를 계산하는 방식에 대해 ward, complete, single, average, centroid가 있는데 지역을 기준으로 색을 칠할 때, 가장 분류가 잘 되는 군집분석은 average 형태였다.
+
+
+실제 계층적 군집분석을 진행할 때 실제 분류된 군과 별개로 4개의 색을 이용해 미국의 각 지역을 표현하였다.
+또한 4개로 나뉜 기준을 9개로 더 잘게 쪼갤 수 있는데, 실제 그래프에서 9개의 붉은 박스를 표현시 같은 색상으로 표현된 지역이라 하더라도 성질이 다른 경우가 있음을 찾아볼 수 있다. Dendogram에서 특히 눈에 띄는 것은, 2번째로 나눠진 것을 잘 살펴보면 reg=2와 reg=3 대부분이 특정 군에 묶인다는 것이다. 해당 지역을 기준으로 다시 하위군 분석을 진행해도 재밌을 것 같다.
+
+```{r}
+library(ape)
+par(mfrow=c(1,2))
+plot(as.phylo(dend.hc), type="unrooted", cex=0.8, main='unrooted')
+plot(as.phylo(dend.hc), type="fan", cex=0.8, main='fan')
+#ref: http://www.sthda.com/english/wiki/beautiful-dendrogram-visualizations-in-r-5-must-known-methods-unsupervised-machine-learning
+```
+
+
+그 외 다양한 형태들의 dendogram을 나타낼 수 있다.
+
+하지만 데이터에 라벨을 달고 해당 라벨에 따라 색상을 지정하고 싶으면, 위에서 나타난 것처럼 따로 함수를 짜야한다.
+
+
+```{r}
 library(qgraph)
 b5dist <- dist(fa.df, method="euclidean")
-head(crime)
+par(mfrow=c(1,2))
 qgraph(b5dist, layout='spring')
+qgraph(b5dist, layout='spring', labels=cat.data$REG) #서로 가까운 거리에 있으면 가깝게
 
-plot(hclust(b5dist, method="ward.D"))
-plot(hclust(b5dist, method="complete"))
-plot(hclust(b5dist, method="single"))
-plot(hclust(b5dist, method="average"))
-plot(hclust(b5dist, method="centroid"))
+```
 
-# idea: 계층적으로 한 후, FA하고 하위군분석으로 kmeans 실시하면될듯.
+이와 같은 그래프도 살펴볼 수 있다. 실제 유클리드 거리를 기준으로 가까운 포인트들을 묶은 것이고
+오른쪽은 데이터의 인덱스가 아니라 지역의 라벨로 이를 표현한 것이다. 유클리드 거리를 기준으로는
+거리가 가까운 것과 지역이 큰 관계가 없는 것으로 보인다.
 
-## 데이터 분포체크 kmedian도 사용해보기 em algorithm 닮음,. r은 iteration을 10번 사용
 
+
+# k-means clustering
+
+이제 계층적 군집분석이 아니라 fa를 통해 구한 3개의 요인에 대한 비계층적 군집분석을 진행하자.
+가장 대표적인 방식으로 이용되는 k-means clustering을 활용할 것이다. EM-algorithm(Expectation-Maximization)의 아이디어로 k-means는 초기값으로 군의 평균을 랜덤하게 지정하고 해당 평균에 가까운 점을 같은 군으로 묶는다. 그리고 해당 과정을 계속 반복하는데, 반복횟수는 r에서 우리가 지정하지만 충분히 수렴하도록 적절한 값을 넣어줘야 한다. k-means에서는 군집의 개수 k를 몇으로 정해야 하는지가 이슈이다.
+
+```{r}
 ## k를 결정하는 방법
 library(NbClust)
 nc <- NbClust(fa.df, method = "kmeans")
-par(mfrow=c(1,1))
-barplot(table(nc$Best.n[1,]), main="Number of Clusters Chosen",xlab='Number of Clusters',ylab='Number of Criteria') # Sum of Square means 얼마나 주는지
+```
 
+군을 4개로 설정하는 것이 가장 적절하다고 나타났다.
+
+```{r}
+par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]), main="Number of Clusters Chosen",xlab='Number of Clusters',ylab='Number of Criteria')
+```
+
+Sum of Squares가 얼마나 줄어드는지 볼 때, 군이 4개일 때가 가장 크게 줄어드는 것으로 확인되었다.
+
+```{r}
 fa.df <- data.frame(fa.df)
 km <- kmeans(fa.df, centers= 4, iter.max=100) 
 library(plotly)
-plot_ly(fa.df, x=fa.df[,1],y=fa.df[,2],z=fa.df[,3], color=km$cluster) %>%
+
+plot_ly(fa.df, x=fa.df[,1],y=fa.df[,2],z=fa.df[,3], size=0.2,color=km$cluster) %>%
   add_markers() %>%
   layout(scene = list(xaxis = list(title = 'Factor1'),
                       yaxis = list(title = 'Factor2'),
                       zaxis = list(title = 'Factor3')))
-
 ```
+
+
+실제 k-means clustering 결과는 위와 같다. 3개의 Factor를 기준으로 크게 4개의 군이 나뉘는 것을 확인할 수 있다.
+
+각 요인들이 설명하는 변수들은 요인과 변수 사이에 양의 관계에 있음을 위에서 확인했다.
+Factor1 대인/대물범죄, Factor2 대인범죄, Factor3 인구밀도에 따른 차량절도죄
+
+보라색 - factor3이 높은 그룹(인구밀도와 차량절도율이 높음)  
+초록색 - factor2이 낮고 factor3이 낮은 그룹(대인범죄와 인구밀도 및 차량절도율도 낮음)  
+노란색 - factor1이 낮고 factor2가 높은 그룹(대물범죄에 비해 대인범죄가 잦음)  
+파란색 - factor1이 높고 factor2가 높은 그룹(대물범죄와 대인범죄 모두 높음
+
+k-means 방법 외에도 아웃라이어의 영향을 덜 받는 k-median clustering, 다변량 정규분포이 가정될 때 사용하는 GMM(Gaussian Mixture Model), 밀도기반의 군집분석 등이 있다.
+
+
+

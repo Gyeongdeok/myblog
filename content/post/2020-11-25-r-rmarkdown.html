@@ -17,63 +17,6 @@ tags: ["Clustering", "K-means"]
 <script src="/rmarkdown-libs/plotly-main/plotly-latest.min.js"></script>
 
 
-<div id="data-description" class="section level1">
-<h1>Data description</h1>
-<p>현재 범죄데이터는 다음과 같은</p>
-<table>
-<thead>
-<tr class="header">
-<th>Default</th>
-<th align="left">Left</th>
-<th align="right">Right</th>
-<th align="center">Center</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>A팀</td>
-<td align="left">deinitice</td>
-<td align="right">100</td>
-<td align="center">연습중</td>
-</tr>
-<tr class="even">
-<td>B팀</td>
-<td align="left">Jung</td>
-<td align="right">90</td>
-<td align="center">추가</td>
-</tr>
-<tr class="odd">
-<td>C팀</td>
-<td align="left">Lee</td>
-<td align="right">95</td>
-<td align="center">연습중</td>
-</tr>
-<tr class="even">
-<td>D팀</td>
-<td align="left">Choi</td>
-<td align="right">85</td>
-<td align="center">추가</td>
-</tr>
-<tr class="odd">
-<td>D팀</td>
-<td align="left">Park</td>
-<td align="right">60</td>
-<td align="center">추가</td>
-</tr>
-<tr class="even">
-<td>D팀</td>
-<td align="left">Hwang</td>
-<td align="right">50</td>
-<td align="center">추가</td>
-</tr>
-<tr class="odd">
-<td>[출처] 36. 데이터 연동형 문서 만들기(5) - R Markdown에서 가독성 좋은 표를 더 간단히 그리기</td>
-<td align="left">작성자 바른인간</td>
-<td align="right"></td>
-<td align="center"></td>
-</tr>
-</tbody>
-</table>
 <pre class="r"><code>library(dplyr)
 ## 
 ## 다음의 패키지를 부착합니다: &#39;dplyr&#39;
@@ -83,73 +26,15 @@ tags: ["Clustering", "K-means"]
 ## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     intersect, setdiff, setequal, union
-# Preprocessing
 crime &lt;- read.csv(&#39;TableB10.csv&#39;)
+options(warn=-1) # turning back code: warn=0
+# Preprocessing
 crime &lt;- crime %&gt;%
   mutate(pop = round(POPU1985 / LANDAREA,3)) %&gt;%
   select(-c(POPU1985,LANDAREA))
-
 cat.data &lt;- select(crime, c(REG,DIV))
 crime &lt;- select(crime, -c(REG,DIV))
 crime &lt;- scale(crime)
-
-# FA
-library(psych)
-covm &lt;- cov(crime)
-corr &lt;- cov2cor(covm)
-par(mfrow=c(1,2))
-scree(corr, factor=F)
-fa.parallel(corr, fa=&#39;fa&#39;)
-## Warning in fa.parallel(corr, fa = &quot;fa&quot;): It seems as if you are using a
-## correlation matrix, but have not specified the number of cases. The number of
-## subjects is arbitrarily set to be 100
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate = rotate, : An
-## ultra-Heywood case was detected. Examine the results carefully
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate = rotate, : An
-## ultra-Heywood case was detected. Examine the results carefully
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate = rotate, : An
-## ultra-Heywood case was detected. Examine the results carefully
-## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
-## The estimated weights for the factor scores are probably incorrect. Try a
-## different factor score estimation method.
-## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate = rotate, : An
-## ultra-Heywood case was detected. Examine the results carefully</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
-<pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  NA
-
-# factor 3개가 적절해 보입니다.
-fa.varimax &lt;- fa(crime, nfactors=3, rotate=&#39;varimax&#39;)
-colnames(fa.varimax$loadings) &lt;- paste(&#39;Factor&#39;,1:3,sep=&#39;&#39;)
-par(mfrow=c(1,1))
-fa.diagram(fa.varimax)</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-2.png" width="672" /></p>
-<pre class="r"><code>colnames(fa.varimax$scores) &lt;- paste(&#39;Factor&#39;,1:3,sep=&#39;&#39;)
-fa.df &lt;- fa.varimax$scores
-
-# HC(Hierarchcial clustering): WARD, Complete, Single, Average, Centroid, using dendrogram
-library(qgraph)
-## Registered S3 methods overwritten by &#39;huge&#39;:
-##   method    from   
-##   plot.sim  BDgraph
-##   print.sim BDgraph
-b5dist &lt;- dist(fa.df, method=&quot;euclidean&quot;)
 head(crime)
 ##            MURD       RAPE         ROB       ASSA       BURG       LARC
 ## [1,] -1.3924177 -1.1725318 -0.97496111 -1.0770184 -1.0214658 -1.2519066
@@ -164,37 +49,241 @@ head(crime)
 ## [3,] -1.2216852 -0.4570429
 ## [4,]  2.5556898  2.6085466
 ## [5,]  2.4605039  3.0634100
-## [6,]  0.5818360  2.2768754
-qgraph(b5dist, layout=&#39;spring&#39;)</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
-<pre class="r"><code>
-plot(hclust(b5dist, method=&quot;ward.D&quot;))</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-4.png" width="672" /></p>
-<pre class="r"><code>plot(hclust(b5dist, method=&quot;complete&quot;))</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-5.png" width="672" /></p>
-<pre class="r"><code>plot(hclust(b5dist, method=&quot;single&quot;))</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-6.png" width="672" /></p>
-<pre class="r"><code>plot(hclust(b5dist, method=&quot;average&quot;))</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-7.png" width="672" /></p>
-<pre class="r"><code>plot(hclust(b5dist, method=&quot;centroid&quot;))</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-8.png" width="672" /></p>
-<pre class="r"><code>
-# idea: 계층적으로 한 후, FA하고 하위군분석으로 kmeans 실시하면될듯.
+## [6,]  0.5818360  2.2768754</code></pre>
+<div id="data-description" class="section level1">
+<h1>Data description</h1>
+<p>현재 다루고 있는 데이터는 다음과 같이 나타난다.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">변수명</th>
+<th align="center">데이터 타입</th>
+<th align="center">변수 설명</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">POP</td>
+<td align="center">NUM</td>
+<td align="center">인구/면적으로 생성한 파생변수로 인구밀도를 나타낸다.</td>
+</tr>
+<tr class="even">
+<td align="center">MURD</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 살인건수</td>
+</tr>
+<tr class="odd">
+<td align="center">RAPE</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 강간건수</td>
+</tr>
+<tr class="even">
+<td align="center">ROB</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 강도건수(현장에 피해자 존재), 강도1</td>
+</tr>
+<tr class="odd">
+<td align="center">ASSA</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 폭행건수</td>
+</tr>
+<tr class="even">
+<td align="center">BURG</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 강도건수(현장에 피해자 존재X), 강도2</td>
+</tr>
+<tr class="odd">
+<td align="center">LARC</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 절도건수</td>
+</tr>
+<tr class="even">
+<td align="center">AUTO</td>
+<td align="center">NUM</td>
+<td align="center">10만명당 자동차 절도건수</td>
+</tr>
+<tr class="odd">
+<td align="center">REG</td>
+<td align="center">CAT</td>
+<td align="center">1~4, 지역구분(West, midwest, south, and northeast)</td>
+</tr>
+<tr class="even">
+<td align="center">DIV</td>
+<td align="center">CAT</td>
+<td align="center">1~9, REG에서 더 세부적으로 나뉨</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="factor-analysis" class="section level1">
+<h1>Factor Analysis</h1>
+<p>요인 분석은 잠재변수를 찾아서 차원을 축소하는 방식이다. 현재 데이터는 범주형 변수를 제외하고 8개의 변수(인구밀도 및 범죄유형)가 존재한다. 요인분석은 해당 8개의 변수를 더 적은 수의 변수로 설명하는 것이다. 이 때 몇개의 요인으로 이 변수를 설명하는 것이 적절한지에 대한 문제가 있는데, 해당 문제는 흔히 두가지 방식으로 결정할 수 있다.</p>
+<p>현재 데이터의 경우 Factor Analysis에서 적절한 factor 개수를 결정하기 위해 다음의 두가지 플랏을 그렸다.
+좌측은 Scree plot이고 우측은 Parallel Analysis를 이용한 방식이다. Scree plot을 그렸을 때 고유값이 1보다 클 때에는 요인이 3개일 때이다. 또한 우측의 그래프에서 교차하는 지점의 이전에서 가장 큰 정수는 3이다.</p>
+<p>Horn’s’ parallel anlalysis를 이용하여 FA에서의 요인 갯수를 산출한다. 해당 방법은 데이터 매트릭스에서 생성된 고유값과 몬테카를로 시뮬레이션으로 만들어진 고유값을 비교한다. 따라서 요인의 개수를 3으로 설정하는 것이 합리적이라고 볼 수 있다.</p>
+<p>(Horn, J.L. A rationale and test for the number of factors in factor analysis. Psychometrika 30, 179–185 (1965). <a href="https://doi.org/10.1007/BF02289447" class="uri">https://doi.org/10.1007/BF02289447</a></p>
+<pre class="r"><code>library(psych)
+covm &lt;- cov(crime)
+corr &lt;- cov2cor(covm)
+par(mfrow=c(1,2))
+scree(corr, factor=F)
+fa.parallel(corr, fa=&#39;fa&#39;)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  NA</code></pre>
+<p>요인의 개수를 3개로 결정하였다. 그렇다면 해당 3개의 요인은 각각 어떤 변수를 설명하고 있을까?
+어느 변수를 얼마만큼의 설명력으로 나타내고 있는지는 다음과 같다.</p>
+<pre class="r"><code>fa.varimax &lt;- fa(crime, nfactors=3, rotate=&#39;varimax&#39;)
+colnames(fa.varimax$loadings) &lt;- paste(&#39;Factor&#39;,1:3,sep=&#39;&#39;)
+colnames(fa.varimax$scores) &lt;- paste(&#39;Factor&#39;,1:3,sep=&#39;&#39;)
+fa.df &lt;- fa.varimax$scores
+par(mfrow=c(1,1))
+fa.varimax
+## Factor Analysis using method =  minres
+## Call: fa(r = crime, nfactors = 3, rotate = &quot;varimax&quot;)
+## Standardized loadings (pattern matrix) based upon correlation matrix
+##      Factor1 Factor2 Factor3   h2    u2 com
+## MURD    0.04    0.87   -0.04 0.76 0.245 1.0
+## RAPE    0.65    0.57   -0.08 0.75 0.253 2.0
+## ROB     0.50    0.41    0.38 0.56 0.439 2.8
+## ASSA    0.29    0.92    0.08 0.94 0.061 1.2
+## BURG    0.85    0.28    0.23 0.86 0.141 1.4
+## LARC    0.91    0.04   -0.02 0.83 0.174 1.0
+## AUTO    0.62    0.12    0.64 0.81 0.193 2.1
+## pop    -0.01   -0.07    0.98 0.96 0.036 1.0
+## 
+##                       Factor1 Factor2 Factor3
+## SS loadings              2.69    2.19    1.57
+## Proportion Var           0.34    0.27    0.20
+## Cumulative Var           0.34    0.61    0.81
+## Proportion Explained     0.42    0.34    0.24
+## Cumulative Proportion    0.42    0.76    1.00
+## 
+## Mean item complexity =  1.6
+## Test of the hypothesis that 3 factors are sufficient.
+## 
+## The degrees of freedom for the null model are  28  and the objective function was  6.25 with Chi Square of  284.16
+## The degrees of freedom for the model are 7  and the objective function was  0.11 
+## 
+## The root mean square of the residuals (RMSR) is  0.01 
+## The df corrected root mean square of the residuals is  0.03 
+## 
+## The harmonic number of observations is  50 with the empirical chi square  0.45  with prob &lt;  1 
+## The total number of observations was  50  with Likelihood Chi Square =  4.94  with prob &lt;  0.67 
+## 
+## Tucker Lewis Index of factoring reliability =  1.034
+## RMSEA index =  0  and the 90 % confidence intervals are  0 0.14
+## BIC =  -22.45
+## Fit based upon off diagonal values = 1
+## Measures of factor score adequacy             
+##                                                   Factor1 Factor2 Factor3
+## Correlation of (regression) scores with factors      0.96    0.97    0.98
+## Multiple R square of scores with factors             0.92    0.94    0.97
+## Minimum correlation of possible factor scores        0.84    0.88    0.93
+fa.diagram(fa.varimax)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>3가지의 요인은 데이터 매트릭스의 약 81%를 설명하고 있다.</p>
+<p>Factor1은 절도, 강도1, 강간, 강도2를 설명한다. Factor2는 폭행과 살인을 설명하고 factor3은 인구밀도와 자동차 절도를 설명한다. 잠재변수의 관점으로 라벨링을 하면 factor1은 대인/대물범죄 factor2는 대인범죄 factor3은 인구밀도에 따른 차량절도죄를 설명한다. 계수를 살펴보면 다음과 같다.</p>
+<p><span class="math display">\[ F_{1} = 0.04MURD + 0.65RAPE + 0.50ROB + 0.29ASSA + 0.85BURG + 0.91LARC + 0.62AUTO - 0.01 pop \]</span></p>
+<p><span class="math display">\[ F_{2} = 0.87MURD + 0.57RAPE + 0.41ROB + 0.92ASSA + 0.28BURG + 0.04LARC + 0.12AUTO - 0.07 pop \]</span></p>
+<p><span class="math display">\[ F_{3} = - 0.04MURD - 0.08RAPE + 0.38ROB + 0.08ASSA + 0.23BURG - 0.02LARC + 0.64AUTO + 0.98 pop \]</span></p>
+<p>이 때 factor1(대인/대물범죄)은 절도, 강도1, 강간, 강도2와 양의 관계에 있으며 factor2(대인범죄)는 폭행과 살인에 대해 양의 관계를 가진다. factor3은 인구밀도와 차량절도죄에 대해 양의 관계를 가지고 있다.</p>
+</div>
+<div id="군집분석" class="section level1">
+<h1>군집분석</h1>
+<p>Unsupervised Learning-Clustering 포스팅에 언급을 하였지만, 크게 계층적 군집분석과 비계층적 군집분석을 나눌 수 있다. 계층적 군집분석은 Single, Complete, Average, Centroid, Ward method (거리 계산하는 방식이 각각 다르다.)의 방식이 있다. Distance matrix를 이용하여 계층을 나누는 것인데 실제 계층적 군집분석을 진행할 때, 지역이 차이가 있는지 확인해보자.</p>
+<pre class="r"><code>library(dendextend)
+## 
+## ---------------------
+## Welcome to dendextend version 1.14.0
+## Type citation(&#39;dendextend&#39;) for how to cite the package.
+## 
+## Type browseVignettes(package = &#39;dendextend&#39;) for the package vignette.
+## The github page is: https://github.com/talgalili/dendextend/
+## 
+## Suggestions and bug-reports can be submitted at: https://github.com/talgalili/dendextend/issues
+## Or contact: &lt;tal.galili@gmail.com&gt;
+## 
+##  To suppress this message use:  suppressPackageStartupMessages(library(dendextend))
+## ---------------------
+## 
+## 다음의 패키지를 부착합니다: &#39;dendextend&#39;
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     cutree
+dend &lt;- crime %&gt;% dist %&gt;% hclust(method=&#39;average&#39;) %&gt;% as.dendrogram(labels=cata.data$REG)
+dend.hc &lt;- crime %&gt;% dist %&gt;% hclust(method=&#39;average&#39;)
 
-## 데이터 분포체크 kmedian도 사용해보기 em algorithm 닮음,. r은 iteration을 10번 사용
+i=0
+colLab&lt;&lt;-function(n){
+  if(is.leaf(n)){
+    #I take the current attributes
+    a=attributes(n)
+    #I deduce the line in the original data, and so the treatment and the specie.
+    ligne=match(attributes(n)$label,1:50)
+    region=cat.data[ligne,1];
+    if(region==1){cat.data$REG=&quot;red&quot;};if(region==2){cat.data$REG=&quot;Darkgreen&quot;}
+    if(region==3){cat.data$REG=&quot;blue&quot;};if(region==5){cat.data$REG=&quot;black&quot;}
+    #Modification of leaf attribute
+    attr(n,&quot;nodePar&quot;)&lt;-c(a$nodePar,list(cex=1.5,lab.cex=1,pch=20,col=cat.data$REG,lab.col=cat.data$REG,lab.font=1,lab.cex=1))
+  }
+  return(n)
+}
 
-## k를 결정하는 방법
+dL &lt;- dendrapply(dend, colLab)
+# ref: https://www.r-graph-gallery.com/31-custom-colors-in-dendrogram.html
+plot(dL , main=&quot;Dendogram(average method)&quot;)
+legend(&quot;topright&quot;, 
+       legend = c(&quot;reg=1&quot; , &quot;reg=2&quot; , &quot;reg=3&quot; , &quot;reg=4&quot;), 
+       col = c(&quot;red&quot;, &quot;Darkgreen&quot; , &quot;blue&quot; , &quot;black&quot;), 
+       pch = c(20,20,20,20), bty = &quot;n&quot;,  pt.cex = 1.5, cex = 0.8 , 
+       text.col = &quot;black&quot;, horiz = FALSE, inset = c(0, 0.1))
+
+dend %&gt;% rect.dendrogram(k=9)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>계층적 군집분석에서 distance matrix를 계산하는 방식에 대해 ward, complete, single, average, centroid가 있는데 지역을 기준으로 색을 칠할 때, 가장 분류가 잘 되는 군집분석은 average 형태였다.</p>
+<p>실제 계층적 군집분석을 진행할 때 실제 분류된 군과 별개로 4개의 색을 이용해 미국의 각 지역을 표현하였다.
+또한 4개로 나뉜 기준을 9개로 더 잘게 쪼갤 수 있는데, 실제 그래프에서 9개의 붉은 박스를 표현시 같은 색상으로 표현된 지역이라 하더라도 성질이 다른 경우가 있음을 찾아볼 수 있다. Dendogram에서 특히 눈에 띄는 것은, 2번째로 나눠진 것을 잘 살펴보면 reg=2와 reg=3 대부분이 특정 군에 묶인다는 것이다. 해당 지역을 기준으로 다시 하위군 분석을 진행해도 재밌을 것 같다.</p>
+<pre class="r"><code>library(ape)
+## 
+## 다음의 패키지를 부착합니다: &#39;ape&#39;
+## The following objects are masked from &#39;package:dendextend&#39;:
+## 
+##     ladderize, rotate
+par(mfrow=c(1,2))
+plot(as.phylo(dend.hc), type=&quot;unrooted&quot;, cex=0.8, main=&#39;unrooted&#39;)
+plot(as.phylo(dend.hc), type=&quot;fan&quot;, cex=0.8, main=&#39;fan&#39;)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>#ref: http://www.sthda.com/english/wiki/beautiful-dendrogram-visualizations-in-r-5-must-known-methods-unsupervised-machine-learning</code></pre>
+<p>그 외 다양한 형태들의 dendogram을 나타낼 수 있다.</p>
+<p>하지만 데이터에 라벨을 달고 해당 라벨에 따라 색상을 지정하고 싶으면, 위에서 나타난 것처럼 따로 함수를 짜야한다.</p>
+<pre class="r"><code>library(qgraph)
+## Registered S3 methods overwritten by &#39;huge&#39;:
+##   method    from   
+##   plot.sim  BDgraph
+##   print.sim BDgraph
+b5dist &lt;- dist(fa.df, method=&quot;euclidean&quot;)
+par(mfrow=c(1,2))
+qgraph(b5dist, layout=&#39;spring&#39;)
+qgraph(b5dist, layout=&#39;spring&#39;, labels=cat.data$REG) #서로 가까운 거리에 있으면 가깝게</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>이와 같은 그래프도 살펴볼 수 있다. 실제 유클리드 거리를 기준으로 가까운 포인트들을 묶은 것이고
+오른쪽은 데이터의 인덱스가 아니라 지역의 라벨로 이를 표현한 것이다. 유클리드 거리를 기준으로는
+거리가 가까운 것과 지역이 큰 관계가 없는 것으로 보인다.</p>
+</div>
+<div id="k-means-clustering" class="section level1">
+<h1>k-means clustering</h1>
+<p>이제 계층적 군집분석이 아니라 fa를 통해 구한 3개의 요인에 대한 비계층적 군집분석을 진행하자.
+가장 대표적인 방식으로 이용되는 k-means clustering을 활용할 것이다. EM-algorithm(Expectation-Maximization)의 아이디어로 k-means는 초기값으로 군의 평균을 랜덤하게 지정하고 해당 평균에 가까운 점을 같은 군으로 묶는다. 그리고 해당 과정을 계속 반복하는데, 반복횟수는 r에서 우리가 지정하지만 충분히 수렴하도록 적절한 값을 넣어줘야 한다. k-means에서는 군집의 개수 k를 몇으로 정해야 하는지가 이슈이다.</p>
+<pre class="r"><code>## k를 결정하는 방법
 library(NbClust)
-nc &lt;- NbClust(fa.df, method = &quot;kmeans&quot;)
-## Warning in pf(beale, pp, df2): NaN이 생성되었습니다
-## Warning in pf(beale, pp, df2): NaN이 생성되었습니다</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-9.png" width="672" /></p>
+nc &lt;- NbClust(fa.df, method = &quot;kmeans&quot;)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <pre><code>## *** : The Hubert index is a graphical method of determining the number of clusters.
 ##                 In the plot of Hubert index, we seek a significant knee that corresponds to a 
 ##                 significant increase of the value of the measure i.e the significant peak in Hubert
 ##                 index second differences plot. 
 ## </code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-10.png" width="672" /></p>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
 <pre><code>## *** : The D index is a graphical method of determining the number of clusters. 
 ##                 In the plot of D index, we seek a significant knee (the significant peak in Dindex
 ##                 second differences plot) that corresponds to a significant increase of the value of
@@ -216,12 +305,13 @@ nc &lt;- NbClust(fa.df, method = &quot;kmeans&quot;)
 ## * According to the majority rule, the best number of clusters is  4 
 ##  
 ##  
-## *******************************************************************
-par(mfrow=c(1,1))
-barplot(table(nc$Best.n[1,]), main=&quot;Number of Clusters Chosen&quot;,xlab=&#39;Number of Clusters&#39;,ylab=&#39;Number of Criteria&#39;) # Sum of Square means 얼마나 주는지</code></pre>
-<p><img src="/post/2020-11-27-r-rmarkdown_files/figure-html/unnamed-chunk-1-11.png" width="672" /></p>
-<pre class="r"><code>
-fa.df &lt;- data.frame(fa.df)
+## *******************************************************************</code></pre>
+<p>군을 4개로 설정하는 것이 가장 적절하다고 나타났다.</p>
+<pre class="r"><code>par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]), main=&quot;Number of Clusters Chosen&quot;,xlab=&#39;Number of Clusters&#39;,ylab=&#39;Number of Criteria&#39;)</code></pre>
+<p><img src="/post/2020-11-25-r-rmarkdown_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Sum of Squares가 얼마나 줄어드는지 볼 때, 군이 4개일 때가 가장 크게 줄어드는 것으로 확인되었다.</p>
+<pre class="r"><code>fa.df &lt;- data.frame(fa.df)
 km &lt;- kmeans(fa.df, centers= 4, iter.max=100) 
 library(plotly)
 ## 필요한 패키지를 로딩중입니다: ggplot2
@@ -241,16 +331,20 @@ library(plotly)
 ## The following object is masked from &#39;package:graphics&#39;:
 ## 
 ##     layout
-plot_ly(fa.df, x=fa.df[,1],y=fa.df[,2],z=fa.df[,3], color=km$cluster) %&gt;%
+
+plot_ly(fa.df, x=fa.df[,1],y=fa.df[,2],z=fa.df[,3], size=0.2,color=km$cluster) %&gt;%
   add_markers() %&gt;%
   layout(scene = list(xaxis = list(title = &#39;Factor1&#39;),
                       yaxis = list(title = &#39;Factor2&#39;),
-                      zaxis = list(title = &#39;Factor3&#39;)))
-## Warning: `arrange_()` is deprecated as of dplyr 0.7.0.
-## Please use `arrange()` instead.
-## See vignette(&#39;programming&#39;) for more help
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+                      zaxis = list(title = &#39;Factor3&#39;)))</code></pre>
 <div id="htmlwidget-1" style="width:672px;height:480px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1">{"x":{"visdat":{"370c144e515":["function () ","plotlyVisDat"]},"cur_data":"370c144e515","attrs":{"370c144e515":{"x":[-0.925443708019828,-1.0237567515971,-0.757849068656308,0.0970827316055407,0.00549618932472962,-0.25844759512275,0.732931031309261,-0.580741325116137,-0.998523750532385,0.0151758321621975,0.0888191731039701,-0.0490738095729466,1.51572095084698,-0.438800756789087,0.132024995220847,-0.568396534666191,0.715166027756456,-1.03719167256326,-0.858291954156644,-0.6058071050926,0.2445501228503,0.307161995965245,0.285349283975289,-0.257570664907623,-1.57650101303179,-1.26180310792177,-0.556352859769529,-0.528991418144458,0.917769180347972,-0.787948235264313,-0.849977202530308,-1.02867928637895,-1.89862058420681,-0.776716424713525,-0.350939412537096,-0.226484535693115,0.356781453791395,-0.273501331949486,-0.165230962067521,-0.267092648018569,1.76384507933532,0.563650004212135,1.7972806824427,0.708347931286301,1.8993211542726,1.38278804579612,1.10405394261124,2.32079351637778,0.273347384675137,1.68127700975058],"y":[-0.852094516665911,-1.12685033698863,-0.918275687791099,-0.800348888727302,-0.727069494843665,-0.886454086564704,0.802137523937351,-0.767833778953284,-0.332712087839386,-0.259634982465598,-0.509143797336271,0.782752367211977,0.522784085353816,-1.32173720964061,-1.25003585061747,-1.23121264558393,0.616782617406733,-1.43847588606869,-0.82159808663632,-0.27786198415806,-0.522617837108669,0.616875686492763,1.36788104497269,0.173172911353361,-0.252669972784215,2.3486479824795,1.23844659965788,0.913602617968397,1.65464639221747,0.330626040211682,0.828973310293025,1.53267531586257,0.740286199728079,0.622414216656822,1.66440617121894,-0.017842158119079,0.913969333251532,-0.875747980221053,-0.756494351289619,-0.798584222413024,0.363240732657211,0.760727178381662,0.600940614313446,-1.25743861966037,0.27066028611504,-0.846330411696385,-0.437246499504686,0.66006597291789,0.723632795197205,-1.76403662217902],"z":[-0.613598380290736,-0.282732727680223,-0.525978800695053,2.60925068836785,2.9394358912576,2.09940837488965,1.1684399190853,3.68589254708116,0.538864474439974,0.544675989919189,0.0393697849286924,0.40184969983803,0.0987309285024466,-0.423550320659391,-0.509304939946543,-0.582080929210486,-0.202029460218295,-0.762644230548856,-0.74467304735956,-0.606152384546056,-0.635990436112137,0.73672826044812,1.37275926669084,-0.0769881357639427,-0.381930352491423,-0.149966034640869,-0.188639172429808,-0.240744570779332,0.184931214129346,-0.21265189023843,-0.118367158038515,-0.285716846286666,-0.456043875394404,-0.526714895019379,-0.134350632525835,-0.493315918853901,-0.363829505771755,-0.757553385739512,-0.777265637776479,-0.784126962079183,-0.446156379353885,-0.626798549374302,-0.579219322201422,-0.743265659879272,-0.587947879195244,-0.506348805454047,-0.652835538625275,0.164960508186788,-0.542421593085822,-0.0633631894989639],"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3],"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter3d","mode":"markers","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"scene":{"xaxis":{"title":"Factor1"},"yaxis":{"title":"Factor2"},"zaxis":{"title":"Factor3"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[-0.925443708019828,-1.0237567515971,-0.757849068656308,0.0970827316055407,0.00549618932472962,-0.25844759512275,0.732931031309261,-0.580741325116137,-0.998523750532385,0.0151758321621975,0.0888191731039701,-0.0490738095729466,1.51572095084698,-0.438800756789087,0.132024995220847,-0.568396534666191,0.715166027756456,-1.03719167256326,-0.858291954156644,-0.6058071050926,0.2445501228503,0.307161995965245,0.285349283975289,-0.257570664907623,-1.57650101303179,-1.26180310792177,-0.556352859769529,-0.528991418144458,0.917769180347972,-0.787948235264313,-0.849977202530308,-1.02867928637895,-1.89862058420681,-0.776716424713525,-0.350939412537096,-0.226484535693115,0.356781453791395,-0.273501331949486,-0.165230962067521,-0.267092648018569,1.76384507933532,0.563650004212135,1.7972806824427,0.708347931286301,1.8993211542726,1.38278804579612,1.10405394261124,2.32079351637778,0.273347384675137,1.68127700975058],"y":[-0.852094516665911,-1.12685033698863,-0.918275687791099,-0.800348888727302,-0.727069494843665,-0.886454086564704,0.802137523937351,-0.767833778953284,-0.332712087839386,-0.259634982465598,-0.509143797336271,0.782752367211977,0.522784085353816,-1.32173720964061,-1.25003585061747,-1.23121264558393,0.616782617406733,-1.43847588606869,-0.82159808663632,-0.27786198415806,-0.522617837108669,0.616875686492763,1.36788104497269,0.173172911353361,-0.252669972784215,2.3486479824795,1.23844659965788,0.913602617968397,1.65464639221747,0.330626040211682,0.828973310293025,1.53267531586257,0.740286199728079,0.622414216656822,1.66440617121894,-0.017842158119079,0.913969333251532,-0.875747980221053,-0.756494351289619,-0.798584222413024,0.363240732657211,0.760727178381662,0.600940614313446,-1.25743861966037,0.27066028611504,-0.846330411696385,-0.437246499504686,0.66006597291789,0.723632795197205,-1.76403662217902],"z":[-0.613598380290736,-0.282732727680223,-0.525978800695053,2.60925068836785,2.9394358912576,2.09940837488965,1.1684399190853,3.68589254708116,0.538864474439974,0.544675989919189,0.0393697849286924,0.40184969983803,0.0987309285024466,-0.423550320659391,-0.509304939946543,-0.582080929210486,-0.202029460218295,-0.762644230548856,-0.74467304735956,-0.606152384546056,-0.635990436112137,0.73672826044812,1.37275926669084,-0.0769881357639427,-0.381930352491423,-0.149966034640869,-0.188639172429808,-0.240744570779332,0.184931214129346,-0.21265189023843,-0.118367158038515,-0.285716846286666,-0.456043875394404,-0.526714895019379,-0.134350632525835,-0.493315918853901,-0.363829505771755,-0.757553385739512,-0.777265637776479,-0.784126962079183,-0.446156379353885,-0.626798549374302,-0.579219322201422,-0.743265659879272,-0.587947879195244,-0.506348805454047,-0.652835538625275,0.164960508186788,-0.542421593085822,-0.0633631894989639],"type":"scatter3d","mode":"markers","marker":{"colorbar":{"title":"","ticklen":2},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3],"line":{"colorbar":{"title":"","ticklen":2},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3]}},"frame":null},{"x":[-1.89862058420681,2.32079351637778],"y":[-1.76403662217902,2.3486479824795],"type":"scatter3d","mode":"markers","opacity":0,"hoverinfo":"none","showlegend":false,"marker":{"colorbar":{"title":"","ticklen":2,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":true,"color":[1,4],"line":{"color":"rgba(255,127,14,1)"}},"z":[-0.784126962079183,3.68589254708116],"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"visdat":{"4794100c771e":["function () ","plotlyVisDat"]},"cur_data":"4794100c771e","attrs":{"4794100c771e":{"x":[-0.925443708019828,-1.0237567515971,-0.757849068656308,0.0970827316055407,0.00549618932472962,-0.25844759512275,0.732931031309261,-0.580741325116137,-0.998523750532385,0.0151758321621975,0.0888191731039701,-0.0490738095729466,1.51572095084698,-0.438800756789087,0.132024995220847,-0.568396534666191,0.715166027756456,-1.03719167256326,-0.858291954156644,-0.6058071050926,0.2445501228503,0.307161995965245,0.285349283975289,-0.257570664907623,-1.57650101303179,-1.26180310792177,-0.556352859769529,-0.528991418144458,0.917769180347972,-0.787948235264313,-0.849977202530308,-1.02867928637895,-1.89862058420681,-0.776716424713525,-0.350939412537096,-0.226484535693115,0.356781453791395,-0.273501331949486,-0.165230962067521,-0.267092648018569,1.76384507933532,0.563650004212135,1.7972806824427,0.708347931286301,1.8993211542726,1.38278804579612,1.10405394261124,2.32079351637778,0.273347384675137,1.68127700975058],"y":[-0.852094516665911,-1.12685033698863,-0.918275687791099,-0.800348888727302,-0.727069494843665,-0.886454086564704,0.802137523937351,-0.767833778953284,-0.332712087839386,-0.259634982465598,-0.509143797336271,0.782752367211977,0.522784085353816,-1.32173720964061,-1.25003585061747,-1.23121264558393,0.616782617406733,-1.43847588606869,-0.82159808663632,-0.27786198415806,-0.522617837108669,0.616875686492763,1.36788104497269,0.173172911353361,-0.252669972784215,2.3486479824795,1.23844659965788,0.913602617968397,1.65464639221747,0.330626040211682,0.828973310293025,1.53267531586257,0.740286199728079,0.622414216656822,1.66440617121894,-0.017842158119079,0.913969333251532,-0.875747980221053,-0.756494351289619,-0.798584222413024,0.363240732657211,0.760727178381662,0.600940614313446,-1.25743861966037,0.27066028611504,-0.846330411696385,-0.437246499504686,0.66006597291789,0.723632795197205,-1.76403662217902],"z":[-0.613598380290736,-0.282732727680223,-0.525978800695053,2.60925068836785,2.9394358912576,2.09940837488965,1.1684399190853,3.68589254708116,0.538864474439974,0.544675989919189,0.0393697849286924,0.40184969983803,0.0987309285024466,-0.423550320659391,-0.509304939946543,-0.582080929210486,-0.202029460218295,-0.762644230548856,-0.74467304735956,-0.606152384546056,-0.635990436112137,0.73672826044812,1.37275926669084,-0.0769881357639427,-0.381930352491423,-0.149966034640869,-0.188639172429808,-0.240744570779332,0.184931214129346,-0.21265189023843,-0.118367158038515,-0.285716846286666,-0.456043875394404,-0.526714895019379,-0.134350632525835,-0.493315918853901,-0.363829505771755,-0.757553385739512,-0.777265637776479,-0.784126962079183,-0.446156379353885,-0.626798549374302,-0.579219322201422,-0.743265659879272,-0.587947879195244,-0.506348805454047,-0.652835538625275,0.164960508186788,-0.542421593085822,-0.0633631894989639],"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3],"size":0.2,"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter3d","mode":"markers","inherit":true}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"scene":{"xaxis":{"title":"Factor1"},"yaxis":{"title":"Factor2"},"zaxis":{"title":"Factor3"}},"hovermode":"closest","showlegend":false,"legend":{"yanchor":"top","y":0.5}},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[-0.925443708019828,-1.0237567515971,-0.757849068656308,0.0970827316055407,0.00549618932472962,-0.25844759512275,0.732931031309261,-0.580741325116137,-0.998523750532385,0.0151758321621975,0.0888191731039701,-0.0490738095729466,1.51572095084698,-0.438800756789087,0.132024995220847,-0.568396534666191,0.715166027756456,-1.03719167256326,-0.858291954156644,-0.6058071050926,0.2445501228503,0.307161995965245,0.285349283975289,-0.257570664907623,-1.57650101303179,-1.26180310792177,-0.556352859769529,-0.528991418144458,0.917769180347972,-0.787948235264313,-0.849977202530308,-1.02867928637895,-1.89862058420681,-0.776716424713525,-0.350939412537096,-0.226484535693115,0.356781453791395,-0.273501331949486,-0.165230962067521,-0.267092648018569,1.76384507933532,0.563650004212135,1.7972806824427,0.708347931286301,1.8993211542726,1.38278804579612,1.10405394261124,2.32079351637778,0.273347384675137,1.68127700975058],"y":[-0.852094516665911,-1.12685033698863,-0.918275687791099,-0.800348888727302,-0.727069494843665,-0.886454086564704,0.802137523937351,-0.767833778953284,-0.332712087839386,-0.259634982465598,-0.509143797336271,0.782752367211977,0.522784085353816,-1.32173720964061,-1.25003585061747,-1.23121264558393,0.616782617406733,-1.43847588606869,-0.82159808663632,-0.27786198415806,-0.522617837108669,0.616875686492763,1.36788104497269,0.173172911353361,-0.252669972784215,2.3486479824795,1.23844659965788,0.913602617968397,1.65464639221747,0.330626040211682,0.828973310293025,1.53267531586257,0.740286199728079,0.622414216656822,1.66440617121894,-0.017842158119079,0.913969333251532,-0.875747980221053,-0.756494351289619,-0.798584222413024,0.363240732657211,0.760727178381662,0.600940614313446,-1.25743861966037,0.27066028611504,-0.846330411696385,-0.437246499504686,0.66006597291789,0.723632795197205,-1.76403662217902],"z":[-0.613598380290736,-0.282732727680223,-0.525978800695053,2.60925068836785,2.9394358912576,2.09940837488965,1.1684399190853,3.68589254708116,0.538864474439974,0.544675989919189,0.0393697849286924,0.40184969983803,0.0987309285024466,-0.423550320659391,-0.509304939946543,-0.582080929210486,-0.202029460218295,-0.762644230548856,-0.74467304735956,-0.606152384546056,-0.635990436112137,0.73672826044812,1.37275926669084,-0.0769881357639427,-0.381930352491423,-0.149966034640869,-0.188639172429808,-0.240744570779332,0.184931214129346,-0.21265189023843,-0.118367158038515,-0.285716846286666,-0.456043875394404,-0.526714895019379,-0.134350632525835,-0.493315918853901,-0.363829505771755,-0.757553385739512,-0.777265637776479,-0.784126962079183,-0.446156379353885,-0.626798549374302,-0.579219322201422,-0.743265659879272,-0.587947879195244,-0.506348805454047,-0.652835538625275,0.164960508186788,-0.542421593085822,-0.0633631894989639],"type":"scatter3d","mode":"markers","marker":{"colorbar":{"title":"","ticklen":2},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3],"size":[55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55,55],"sizemode":"area","line":{"colorbar":{"title":"","ticklen":2},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"color":[3,3,3,1,1,1,2,1,4,3,3,4,2,3,3,3,2,3,3,3,3,2,2,4,4,4,4,4,2,4,4,4,4,4,4,3,2,3,3,3,2,2,2,3,2,3,3,2,2,3]}},"textfont":{"size":55},"error_y":{"width":55},"error_x":{"width":55},"line":{"width":55},"frame":null},{"x":[-1.89862058420681,2.32079351637778],"y":[-1.76403662217902,2.3486479824795],"type":"scatter3d","mode":"markers","opacity":0,"hoverinfo":"none","showlegend":false,"marker":{"colorbar":{"title":"","ticklen":2,"len":0.5,"lenmode":"fraction","y":1,"yanchor":"top"},"cmin":1,"cmax":4,"colorscale":[["0","rgba(68,1,84,1)"],["0.0416666666666667","rgba(70,19,97,1)"],["0.0833333333333333","rgba(72,32,111,1)"],["0.125","rgba(71,45,122,1)"],["0.166666666666667","rgba(68,58,128,1)"],["0.208333333333333","rgba(64,70,135,1)"],["0.25","rgba(60,82,138,1)"],["0.291666666666667","rgba(56,93,140,1)"],["0.333333333333333","rgba(49,104,142,1)"],["0.375","rgba(46,114,142,1)"],["0.416666666666667","rgba(42,123,142,1)"],["0.458333333333333","rgba(38,133,141,1)"],["0.5","rgba(37,144,140,1)"],["0.541666666666667","rgba(33,154,138,1)"],["0.583333333333333","rgba(39,164,133,1)"],["0.625","rgba(47,174,127,1)"],["0.666666666666667","rgba(53,183,121,1)"],["0.708333333333333","rgba(79,191,110,1)"],["0.75","rgba(98,199,98,1)"],["0.791666666666667","rgba(119,207,85,1)"],["0.833333333333333","rgba(147,214,70,1)"],["0.875","rgba(172,220,52,1)"],["0.916666666666667","rgba(199,225,42,1)"],["0.958333333333333","rgba(226,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":true,"color":[1,4],"line":{"color":"rgba(255,127,14,1)"}},"z":[-0.784126962079183,3.68589254708116],"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>실제 k-means clustering 결과는 위와 같다. 3개의 Factor를 기준으로 크게 4개의 군이 나뉘는 것을 확인할 수 있다.</p>
+<p>각 요인들이 설명하는 변수들은 요인과 변수 사이에 양의 관계에 있음을 위에서 확인했다.
+Factor1 대인/대물범죄, Factor2 대인범죄, Factor3 인구밀도에 따른 차량절도죄</p>
+<p>보라색 - factor3이 높은 그룹(인구밀도와 차량절도율이 높음)<br />
+초록색 - factor2이 낮고 factor3이 낮은 그룹(대인범죄와 인구밀도 및 차량절도율도 낮음)<br />
+노란색 - factor1이 낮고 factor2가 높은 그룹(대물범죄에 비해 대인범죄가 잦음)<br />
+파란색 - factor1이 높고 factor2가 높은 그룹(대물범죄와 대인범죄 모두 높음</p>
+<p>k-means 방법 외에도 아웃라이어의 영향을 덜 받는 k-median clustering, 다변량 정규분포이 가정될 때 사용하는 GMM(Gaussian Mixture Model), 밀도기반의 군집분석 등이 있다.</p>
 </div>
