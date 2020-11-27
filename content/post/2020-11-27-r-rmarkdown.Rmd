@@ -1,10 +1,12 @@
 ---
 title: "Clustering"
 author: "Gyeongdeok Seo"
-date: 2020-11-27T21:13:14-05:00
-categories: ["R"]
+date: '2020-11-27T21:13:14-05:00'
 mainfont: NanumGothic
-tags: ["Clustering", "K-means"]
+tags:
+- Clustering
+- K-means
+categories: R
 ---
 
 ```{r setup, include=FALSE}
