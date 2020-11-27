@@ -1,0 +1,76 @@
+---
+title: "Clustering"
+author: "Gyeongdeok Seo"
+date: 2020-11-27T21:13:14-05:00
+categories: ["R"]
+mainfont: NanumGothic
+tags: ["Clustering", "K-means"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/Duck/myblog/data")
+```
+
+
+
+```{r}
+library(dplyr)
+# Preprocessing
+crime <- read.csv('TableB10.csv')
+crime <- crime %>%
+  mutate(pop = round(POPU1985 / LANDAREA,3)) %>%
+  select(-c(POPU1985,LANDAREA))
+
+cat.data <- select(crime, c(REG,DIV))
+crime <- select(crime, -c(REG,DIV))
+crime <- scale(crime)
+
+# FA
+library(psych)
+covm <- cov(crime)
+corr <- cov2cor(covm)
+par(mfrow=c(1,2))
+scree(corr, factor=F)
+fa.parallel(corr, fa='fa')
+
+# factor 3개가 적절해 보입니다.
+fa.varimax <- fa(crime, nfactors=3, rotate='varimax')
+colnames(fa.varimax$loadings) <- paste('Factor',1:3,sep='')
+par(mfrow=c(1,1))
+fa.diagram(fa.varimax)
+colnames(fa.varimax$scores) <- paste('Factor',1:3,sep='')
+fa.df <- fa.varimax$scores
+
+# HC(Hierarchcial clustering): WARD, Complete, Single, Average, Centroid, using dendrogram
+library(qgraph)
+b5dist <- dist(fa.df, method="euclidean")
+head(crime)
+qgraph(b5dist, layout='spring')
+
+plot(hclust(b5dist, method="ward.D"))
+plot(hclust(b5dist, method="complete"))
+plot(hclust(b5dist, method="single"))
+plot(hclust(b5dist, method="average"))
+plot(hclust(b5dist, method="centroid"))
+
+# idea: 계층적으로 한 후, FA하고 하위군분석으로 kmeans 실시하면될듯.
+
+## 데이터 분포체크 kmedian도 사용해보기 em algorithm 닮음,. r은 iteration을 10번 사용
+
+## k를 결정하는 방법
+library(NbClust)
+nc <- NbClust(fa.df, method = "kmeans")
+par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]), main="Number of Clusters Chosen",xlab='Number of Clusters',ylab='Number of Criteria') # Sum of Square means 얼마나 주는지
+
+fa.df <- data.frame(fa.df)
+km <- kmeans(fa.df, centers= 4, iter.max=100) 
+library(plotly)
+plot_ly(fa.df, x=fa.df[,1],y=fa.df[,2],z=fa.df[,3], color=km$cluster) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'Factor1'),
+                      yaxis = list(title = 'Factor2'),
+                      zaxis = list(title = 'Factor3')))
+
+```

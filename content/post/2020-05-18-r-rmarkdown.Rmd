@@ -20,6 +20,23 @@ knitr::opts_chunk$set(collapse = TRUE)
 ![RNN network](/post/2015-07-23-r-rmarkdown_files/rnn1.png){#id .class width="70%"}
 <center>
 
+# Equation
+ $$ Hidden-nodes : a_t = W_Hh_{t-1} + W_XX_t $$
+ 이 때 a는 히든레이어의 입력이다. a는 이전시점에서의 히든 스테이트의 아웃풋과 웨이트의 곱 + 현재시점에서의 인풋값과 웨이트의 곱이다.
+  $$ h_t = tanh(a_t), y_t=softmax(W_Yh_t) $$
+  k: the dimension of input vector x
+  d: the number of hidden nodes (hyperparameter)
+  $$ W_x \in d\times k, W_Y \in k \times d, W_H \in d\times d $$
+  $$ a_t, h_t \in d \times 1, y_t \in k \times 1 $$
+  $$ tanh(a_t) = \frac{e^{a_t}-e^{-a_t}}{e^{a_t}+e^{a_t}} $$
+  $$ softmax(W_Yh_t) = \frac{e^{W_Yh_t}}{\sum e^{W_Yh_T}} $$
+ 
+ 
+ 
+ Remind 
+
+ 
+
 # Vanishing Gradient
  Vanishing Gradient 문제가 RNN에서 자주 발생할 때가 있다. 왜냐하면 Time-dependent 모델이기 때문에 특정 스테이트에서 모델을 업데이트 하기 위해서는 과거 스테이트의 정보가 다 들어가기 때문이다. 이런 경우에 작은 값이 있으면 바로 0으로 수렴해가기 때문에 이를 해결할 방법이 필요하다.
  
@@ -28,3 +45,6 @@ knitr::opts_chunk$set(collapse = TRUE)
  
 # GRU
  그 다음 Gated Recurrent Unit (GRU)이 있다. 이는 Simplified version of LSTM 이다.
+
+# 마크다운용 주소참고
+https://www.calvin.edu/~rpruim/courses/s341/S17/from-class/MathinRmd.html
