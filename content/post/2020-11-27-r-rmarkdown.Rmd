@@ -12,7 +12,19 @@ knitr::opts_chunk$set(collapse = TRUE)
 knitr::opts_knit$set(root.dir = "C:/Users/Duck/myblog/data")
 ```
 
-이야기의 시작
+# Data description
+현재 범죄데이터는 다음과 같은 
+
+| Default | Left| Right | Center |
+|--| :- | ---:| :------: |
+|A팀 | deinitice | 100| 연습중 |
+|B팀 | Jung | 90| 추가 |
+|C팀 | Lee | 95| 연습중 |
+|D팀 | Choi | 85| 추가 |
+|D팀 | Park | 60| 추가 |
+|D팀 | Hwang | 50 | 추가 |
+[출처] 36. 데이터 연동형 문서 만들기(5) - R Markdown에서 가독성 좋은 표를 더 간단히 그리기|작성자 바른인간
+
 
 ```{r}
 library(dplyr)
