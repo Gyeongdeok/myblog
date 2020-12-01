@@ -1,10 +1,11 @@
 ---
 title: "LDA"
 author: "Gyeongdeok Seo"
-date: 2020-11-28T21:13:14-05:00
-categories: ["R"]
+date: '2020-11-27T21:13:14-05:00'
+output: pdf_document
 mainfont: NanumGothic
 tags: ["LDA"]
+categories: R
 ---
 
 ```{r setup, include=FALSE}
@@ -71,6 +72,16 @@ ggpairs(wais[,-1], aes(colour=REGROUP))
 table(wais[,1], wais[,2])
 ```
 
+위의 플랏은 IGROUP을 기준으로 색이 나뉜 것이고, 밑의 플랏은 REGROUP을 기준으로 색을 나눈 것이다.  
 테이블에서 보이듯이 정분류는 43개이며, 오분류는 6개이다.
 정분류는 1을 1로 분류한 것이 36개, 2를 2로 분류한 게 6개이다.
 그리고 igroup의 2를 regroup에서 1로 오분류 한것이 6개로 나타난다. 오분류의 확률은 $\dfrac{6}{49}$로 나타난다.
+
+
+```{r}
+plot(ld.wais)
+```
+
+위의 그래프는 각 그룹의 데이터가 new axis에 projection된 후의 분포를 나타낸다. 실제 group1과 group2는 new axis의 0을 기준으로 어느정도 판별이 되고 있음을 보인다.
+
+
